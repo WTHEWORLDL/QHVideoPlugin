@@ -1,5 +1,10 @@
 <resources>
 
     <string name="app_name">QHVideoPlugin</string>
+    <string name="current_progress">~~</string>
+    <string name="total_progress">~~</string>
+    <string name="slash">/</string>
+    <string name="switch_fullscreen">全屏</string>
+    <string name="switch_smallscreen">退出全屏</string>
 
 </resources>
