@@ -4,6 +4,7 @@ package com.wangli.qhvideoplugin.activity;
 import com.qihoo.qplayer.QihooMediaPlayer;
 import com.qihoo.qplayer.QihooMediaPlayer.OnBufferingUpdateListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnCompletionListener;
+import com.qihoo.qplayer.QihooMediaPlayer.OnErrorListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnPositionChangeListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnPreparedListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnSeekCompleteListener;
@@ -35,6 +36,7 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 
@@ -320,6 +322,7 @@ public class VideoFullActivity extends BaseActivity {
                 if (pbBuffer.isShown()) {
                     pbBuffer.setVisibility(View.GONE);
                 }
+                ibPlay.setBackgroundResource(R.drawable.ib_pause_full);
                 player.start();
             }
         });
@@ -330,6 +333,16 @@ public class VideoFullActivity extends BaseActivity {
             public void onCompletion(QihooMediaPlayer player) {
                 tvCurrentProgress.setText(CommonUtil.getTime(player.getDuration()));
                 finish();
+            }
+        });
+
+        videoView.setOnErrorListener(new OnErrorListener() {
+
+            @Override
+            public boolean onError(QihooMediaPlayer arg0, int arg1, int arg2) {
+                Toast.makeText(VideoFullActivity.this, "error", Toast.LENGTH_LONG).show();
+                release();
+                return false;
             }
         });
 
@@ -371,8 +384,10 @@ public class VideoFullActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 if (videoView.isPlaying()) {
+                    ibPlay.setBackgroundResource(R.drawable.ib_play_full);
                     videoView.pause();
                 } else {
+                    ibPlay.setBackgroundResource(R.drawable.ib_pause_full);
                     videoView.start();
                 }
             }

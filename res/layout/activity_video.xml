@@ -5,8 +5,8 @@
 
     <com.wangli.qhvideoplugin.view.QHVideoController
         android:id="@+id/qhvc_controller"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="320dp"
+        android:layout_height="225dp"
         android:layout_centerInParent="true" >
     </com.wangli.qhvideoplugin.view.QHVideoController>
 

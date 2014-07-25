@@ -4,6 +4,7 @@ package com.wangli.qhvideoplugin.view;
 import com.qihoo.qplayer.QihooMediaPlayer;
 import com.qihoo.qplayer.QihooMediaPlayer.OnBufferingUpdateListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnCompletionListener;
+import com.qihoo.qplayer.QihooMediaPlayer.OnErrorListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnPositionChangeListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnPreparedListener;
 import com.qihoo.qplayer.view.QihooVideoView;
@@ -14,6 +15,8 @@ import com.wangli.qhvideoplugin.utils.CommonUtil;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -26,6 +29,9 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.lang.ref.WeakReference;
 
 public class QHVideoController extends FrameLayout {
 
@@ -41,12 +47,41 @@ public class QHVideoController extends FrameLayout {
     private final int videoWidthDp = 320;
     private final int controllerHeightDp = 30;
     private final int ivPauseId = 0x12345678;
+    private final int tvTimeMarginTopDp = 5;
 
     private String website = "youku";
     private String url = "http%3A%2F%2Fv.youku.com%2Fv_show%2Fid_XNzMzNjkwMjQ4.html";
     private String title = "狗血的山姆";
 
     private RelativeLayout rlPause;
+
+    private static final int MSG_RELEASE = 0x00000001;
+
+    private static class ControllerHandler extends Handler {
+
+        private WeakReference<QHVideoController> reference;
+
+        public ControllerHandler(WeakReference<QHVideoController> reference) {
+            this.reference = reference;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            QHVideoController controller = reference.get();
+            switch (msg.what) {
+                case MSG_RELEASE:
+                    if (controller != null) {
+                        controller.release();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private ControllerHandler handler = new ControllerHandler(new WeakReference<QHVideoController>(
+            this));
 
     public QHVideoController(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -119,6 +154,7 @@ public class QHVideoController extends FrameLayout {
         RelativeLayout.LayoutParams timeParams = new RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
         timeParams.addRule(RelativeLayout.BELOW, ivPauseId);
+        timeParams.topMargin = CommonUtil.dip2px(context, tvTimeMarginTopDp);
         tvTime = new TextView(context);
         tvTime.setText(CommonUtil.getTime(0));
         rlPause.addView(tvTime, timeParams);
@@ -184,7 +220,7 @@ public class QHVideoController extends FrameLayout {
         });
     }
 
-    private void initVideoView(Context context) {
+    private void initVideoView(final Context context) {
 
         FrameLayout.LayoutParams videoParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -234,7 +270,17 @@ public class QHVideoController extends FrameLayout {
         videoView.setOnCompletetionListener(new OnCompletionListener() {
             @Override
             public void onCompletion(QihooMediaPlayer player) {
-                release();
+                handler.sendEmptyMessage(MSG_RELEASE);
+            }
+        });
+
+        videoView.setOnErrorListener(new OnErrorListener() {
+
+            @Override
+            public boolean onError(QihooMediaPlayer arg0, int arg1, int arg2) {
+                Toast.makeText(context, "error", Toast.LENGTH_LONG).show();
+                handler.sendEmptyMessage(MSG_RELEASE);
+                return false;
             }
         });
     }
