@@ -3,6 +3,7 @@ package com.wangli.qhvideoplugin.view;
 
 import com.qihoo.qplayer.QihooMediaPlayer;
 import com.qihoo.qplayer.QihooMediaPlayer.OnBufferingUpdateListener;
+import com.qihoo.qplayer.QihooMediaPlayer.OnCompletionListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnPositionChangeListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnPreparedListener;
 import com.qihoo.qplayer.view.QihooVideoView;
@@ -12,6 +13,7 @@ import com.wangli.qhvideoplugin.utils.CommonUtil;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -29,22 +31,22 @@ public class QHVideoController extends FrameLayout {
 
     private QihooVideoView videoView;
     private RelativeLayout rlController;
-    private ImageButton ibPlay;
-    private TextView tvCurrentProgress;
-    private TextView tvAllProgress;
     private SeekBar sbProgress;
     private ImageButton ibFull;
     private ImageView ivThumb;
     private ProgressBar pbBuffer;
     private ImageView ivPause;
+    private TextView tvTime;
 
     private final int videoWidthDp = 320;
     private final int controllerHeightDp = 30;
-    private final float alphaController = 0.3f;
+    private final int ivPauseId = 0x12345678;
 
     private String website = "youku";
     private String url = "http%3A%2F%2Fv.youku.com%2Fv_show%2Fid_XNzMzNjkwMjQ4.html";
-    private String title;
+    private String title = "狗血的山姆";
+
+    private RelativeLayout rlPause;
 
     public QHVideoController(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -61,53 +63,82 @@ public class QHVideoController extends FrameLayout {
         initView(context);
     }
 
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+    }
+
+    public void setThumb(Bitmap bitmap) {
+        if (ivThumb != null) {
+            ivThumb.setImageBitmap(bitmap);
+        }
+    }
+
+    public void setTime(long time) {
+        if (tvTime != null) {
+            tvTime.setText(CommonUtil.getTime(time));
+        }
+    }
+
     private void initView(final Context context) {
-        initVideoView(context);
         LayoutInflater layoutInflater = LayoutInflater.from(context);
 
         FrameLayout.LayoutParams controllerParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, CommonUtil.dip2px(context, controllerHeightDp));
+                FrameLayout.LayoutParams.MATCH_PARENT, CommonUtil.dip2px(context,
+                        controllerHeightDp));
         rlController = (RelativeLayout) layoutInflater.inflate(R.layout.controller_strip_video,
                 this, false);
-        controllerParams.gravity=Gravity.BOTTOM|Gravity.CENTER_HORIZONTAL;
-        rlController.getBackground().setAlpha((int) (255*alphaController));
+        controllerParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
         addView(rlController, controllerParams);
 
         ibFull = (ImageButton) findViewById(R.id.ib_full);
-        ibPlay = (ImageButton) findViewById(R.id.ib_play);
-        tvCurrentProgress = (TextView) findViewById(R.id.tv_current_progress);
-        tvAllProgress = (TextView) findViewById(R.id.tv_total_progress);
         sbProgress = (SeekBar) findViewById(R.id.sb_progress);
 
         pbBuffer = new ProgressBar(context);
         ivThumb = new ImageView(context);
-        ivThumb.setBackgroundResource(R.drawable.iv_thumb);
-        ivPause = new ImageView(context);
-        ivPause.setBackgroundResource(R.drawable.iv_pause);
+        ivThumb.setImageResource(R.drawable.iv_thumb);
 
         FrameLayout.LayoutParams centerParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
         centerParams.gravity = Gravity.CENTER;
         addView(ivThumb, centerParams);
+
         addView(pbBuffer, centerParams);
 
-        addView(ivPause, centerParams);
+        rlPause = new RelativeLayout(context);
+
+        ivPause = new ImageView(context);
+        ivPause.setBackgroundResource(R.drawable.un_play);
+
+        RelativeLayout.LayoutParams pauseParams = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        ivPause.setId(ivPauseId);
+        rlPause.addView(ivPause, pauseParams);
+
+        RelativeLayout.LayoutParams timeParams = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        timeParams.addRule(RelativeLayout.BELOW, ivPauseId);
+        tvTime = new TextView(context);
+        tvTime.setText(CommonUtil.getTime(0));
+        rlPause.addView(tvTime, timeParams);
+
+        addView(rlPause, centerParams);
 
         pbBuffer.setVisibility(View.GONE);
         rlController.setVisibility(View.GONE);
-
         ivThumb.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (ivThumb.isShown()) {
-                    ivPause.setVisibility(View.GONE);
-                    
-                    if(videoView==null){
+                    rlPause.setVisibility(View.GONE);
+                    tvTime.setVisibility(View.GONE);
+                    if (videoView == null) {
                         initVideoView(context);
                     }
-                    
+
                     int width = CommonUtil.dip2px(context, videoWidthDp);
-                    
+
                     videoView.setVisibility(View.VISIBLE);
                     videoView.initVideoWidAndHeight(width, width);
                     videoView.setDataSource(website,
@@ -137,17 +168,6 @@ public class QHVideoController extends FrameLayout {
             }
         });
 
-        ibPlay.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (videoView.isPlaying()) {
-                    videoView.pause();
-                } else {
-                    videoView.start();
-                }
-            }
-        });
-
         ibFull.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -165,22 +185,21 @@ public class QHVideoController extends FrameLayout {
     }
 
     private void initVideoView(Context context) {
-        
+
         FrameLayout.LayoutParams videoParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT);
         videoView = new QihooVideoView(context);
         videoParams.gravity = Gravity.CENTER;
-        addView(videoView, videoParams);
-        
+        addView(videoView, 0, videoParams);
+
         videoView.setOnPreparedListener(new OnPreparedListener() {
             @Override
             public void onPrepared(QihooMediaPlayer player) {
-                tvAllProgress.setText(CommonUtil.getTime(player.getDuration()));
-                tvCurrentProgress.setText(CommonUtil.getTime(player.getCurrentPosition()));
                 videoView.start();
                 pbBuffer.setVisibility(View.GONE);
                 ivThumb.setVisibility(View.GONE);
+                rlController.setVisibility(View.VISIBLE);
             }
         });
 
@@ -189,7 +208,6 @@ public class QHVideoController extends FrameLayout {
             public void onPlayPositionChanged(QihooMediaPlayer player, int position) {
                 int progress = (int) (((float) position / (float) player.getDuration()) * 100);
                 sbProgress.setProgress(progress);
-                tvCurrentProgress.setText(CommonUtil.getTime(position));
             }
         });
 
@@ -203,11 +221,20 @@ public class QHVideoController extends FrameLayout {
         videoView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (rlController.isShown()) {
-                    rlController.setVisibility(View.GONE);
+                if (videoView.isPlaying()) {
+                    videoView.pause();
+                    rlPause.setVisibility(View.VISIBLE);
                 } else {
-                    rlController.setVisibility(View.VISIBLE);
+                    videoView.start();
+                    rlPause.setVisibility(View.GONE);
                 }
+            }
+        });
+
+        videoView.setOnCompletetionListener(new OnCompletionListener() {
+            @Override
+            public void onCompletion(QihooMediaPlayer player) {
+                release();
             }
         });
     }
@@ -244,6 +271,7 @@ public class QHVideoController extends FrameLayout {
         pbBuffer.setVisibility(View.GONE);
         ivThumb.setVisibility(View.VISIBLE);
         rlController.setVisibility(View.GONE);
-        ivPause.setVisibility(View.VISIBLE);
+        rlPause.setVisibility(View.VISIBLE);
+        tvTime.setVisibility(View.VISIBLE);
     }
 }

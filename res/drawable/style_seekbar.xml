@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item
-        android:id="@android:id/background"
-        android:paddingBottom="2dip"
-        android:paddingTop="2dip">
+    <item android:id="@android:id/background">
         <shape>
             <corners android:radius="3dip" />
 
@@ -16,16 +13,13 @@
                 android:startColor="#ff5a5d5a" />
         </shape>
     </item>
-    <item
-        android:id="@android:id/progress"
-        android:paddingBottom="2dip"
-        android:paddingTop="2dip">
+    <item android:id="@android:id/progress">
         <clip>
             <shape>
                 <corners android:radius="3dip" />
 
                 <gradient
-                    android:angle="360"
+                    android:angle="90"
                     android:centerColor="#2fe939"
                     android:centerY="0.75"
                     android:endColor="#2fe939"

@@ -3,8 +3,10 @@ package com.wangli.qhvideoplugin.activity;
 
 import com.qihoo.qplayer.QihooMediaPlayer;
 import com.qihoo.qplayer.QihooMediaPlayer.OnBufferingUpdateListener;
+import com.qihoo.qplayer.QihooMediaPlayer.OnCompletionListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnPositionChangeListener;
 import com.qihoo.qplayer.QihooMediaPlayer.OnPreparedListener;
+import com.qihoo.qplayer.QihooMediaPlayer.OnSeekCompleteListener;
 import com.qihoo.qplayer.view.QihooVideoView;
 import com.wangli.qhvideoplugin.R;
 import com.wangli.qhvideoplugin.utils.CommonUtil;
@@ -14,14 +16,19 @@ import com.wangli.qhvideoplugin.view.VerticalSeekBar.OnSeekBarChangeListener;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -29,7 +36,11 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
+
 public class VideoFullActivity extends BaseActivity {
+
+    private boolean isBrightnessAuto = false;
 
     private QihooVideoView videoView;
     private RelativeLayout rlController;
@@ -51,6 +62,60 @@ public class VideoFullActivity extends BaseActivity {
     private VerticalSeekBar vsbBrightness;
     private VerticalSeekBar vsbVolume;
 
+    private FrameLayout decorView;
+
+    private static final int MSG_HIDE_CONTROLLER = 0x00000001;
+
+    private boolean adjustVolume = false;
+
+    private static class ControllerHandler extends Handler {
+
+        private WeakReference<VideoFullActivity> reference;
+
+        public ControllerHandler(WeakReference<VideoFullActivity> reference) {
+            this.reference = reference;
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            VideoFullActivity activity = reference.get();
+            switch (msg.what) {
+                case MSG_HIDE_CONTROLLER:
+                    if (activity != null) {
+                        activity.hideBrightness();
+                        activity.hideVolume();
+                        activity.hideController();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    public void hideController() {
+        if (rlController.isShown()) {
+            rlController.setVisibility(View.GONE);
+        }
+    }
+
+    public void hideBrightness() {
+        if (vsbBrightness.isShown()) {
+            vsbBrightness.setVisibility(View.GONE);
+            ibBrightness.setBackgroundResource(R.drawable.ib_brightness_full);
+        }
+    }
+
+    public void hideVolume() {
+        if (vsbVolume.isShown()) {
+            vsbVolume.setVisibility(View.GONE);
+            initIbVolumeBack();
+        }
+    }
+
+    private ControllerHandler handler = new ControllerHandler(new WeakReference<VideoFullActivity>(
+            this));
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,8 +136,9 @@ public class VideoFullActivity extends BaseActivity {
     @SuppressWarnings("deprecation")
     private void initView() {
 
-        FrameLayout decorView = (FrameLayout) getWindow().getDecorView();
+        initScreenBrightness();
 
+        decorView = (FrameLayout) getWindow().getDecorView();
         videoView = new QihooVideoView(this);
         FrameLayout.LayoutParams videoParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
@@ -103,63 +169,100 @@ public class VideoFullActivity extends BaseActivity {
         sbProgress = (SeekBar) findViewById(R.id.sb_progress_full);
         ibBrightness = (ImageButton) findViewById(R.id.ib_brightness_full);
         ibVolume = (ImageButton) findViewById(R.id.ib_volume_full);
+
+        initIbVolumeBack();
+
         vsbBrightness = (VerticalSeekBar) findViewById(R.id.vsb_brightness_full);
         vsbVolume = (VerticalSeekBar) findViewById(R.id.vsb_volume_full);
+
+        vsbBrightness.setMax(100);
+        vsbVolume.setMax(100);
+
         ibBrightness.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                vsbBrightness.setVisibility(View.VISIBLE);
-                int brightness = getScreenBrightness();
-                vsbBrightness.setProgress((int) ((brightness / 255f) * vsbBrightness.getMax()));
+                if (vsbBrightness.isShown()) {
+                    vsbBrightness.setVisibility(View.GONE);
+                    ibBrightness.setBackgroundResource(R.drawable.ib_brightness_full);
+                } else {
+                    vsbBrightness.setVisibility(View.VISIBLE);
+                    int brightness = getScreenBrightness();
+                    vsbBrightness.setProgress((int) ((brightness * 1.00f / 255) * vsbBrightness
+                            .getMax()));
+                    hideVolume();
+                    ibBrightness.setBackgroundResource(R.drawable.ib_brightness_selected);
+                }
+
             }
         });
 
         ibVolume.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                vsbVolume.setVisibility(View.VISIBLE);
-                vsbVolume
-                        .setProgress((int) ((float) (getCurrentVolume() / getMaxVolume()) * vsbVolume
-                                .getMax()));
+                if (vsbVolume.isShown()) {
+                    vsbVolume.setVisibility(View.GONE);
+                    if (getCurrentVolume() == 0) {
+                        ibVolume.setBackgroundResource(R.drawable.ib_volume_silence);
+                    } else {
+                        ibVolume.setBackgroundResource(R.drawable.ib_volume_default);
+                    }
+                } else {
+                    vsbVolume.setVisibility(View.VISIBLE);
+                    if (getCurrentVolume() == 0) {
+                        ibVolume.setBackgroundResource(R.drawable.ib_volume_silence_selected);
+                    } else {
+                        ibVolume.setBackgroundResource(R.drawable.ib_volume_selected);
+                    }
+                    vsbVolume
+                            .setProgress((int) ((getCurrentVolume() * 1.00f / getMaxVolume()) * vsbVolume
+                                    .getMax()));
+                    hideBrightness();
+                }
             }
         });
 
         vsbBrightness.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(VerticalSeekBar vBar, int progress, boolean fromUser) {
-                Log.e("brightness", "xxxprogress..."+progress);
-                saveScreenBrightness((int) ((float) (progress / vBar.getMax()) * 255));                
+                if (fromUser) {
+                    saveScreenBrightness((int) ((progress * 1.00f / vBar.getMax()) * 255));
+                }
             }
 
             @Override
             public void onStartTrackingTouch(VerticalSeekBar vBar) {
-                // TODO Auto-generated method stub
-                
+
             }
 
             @Override
             public void onStopTrackingTouch(VerticalSeekBar vBar) {
-                // TODO Auto-generated method stub
-                
+
             }
         });
         vsbVolume.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(VerticalSeekBar vBar, int progress, boolean fromUser) {
-                Log.e("volume", "xxxvolume..."+progress);
-                setVolume((int) ((float) (progress / vBar.getMax()) * getMaxVolume()));                
+                if (fromUser || adjustVolume) {
+                    setVolume((int) ((progress * 1.00f / vBar.getMax() * getMaxVolume())));
+                    adjustVolume = false;
+                }
+                if (vsbVolume.isShown()) {
+                    if (progress == 0) {
+                        ibVolume.setBackgroundResource(R.drawable.ib_volume_silence_selected);
+                    } else {
+                        ibVolume.setBackgroundResource(R.drawable.ib_volume_selected);
+                    }
+                }
             }
 
             @Override
             public void onStartTrackingTouch(VerticalSeekBar vBar) {
-                // TODO Auto-generated method stub
-                
+
             }
 
             @Override
             public void onStopTrackingTouch(VerticalSeekBar vBar) {
-                // TODO Auto-generated method stub
-                
+
             }
         });
 
@@ -182,7 +285,6 @@ public class VideoFullActivity extends BaseActivity {
                 tvAllProgress.setText(CommonUtil.getTime(player.getDuration()));
                 tvCurrentProgress.setText(CommonUtil.getTime(player.getCurrentPosition()));
                 videoView.seekTo(position);
-                pbBuffer.setVisibility(View.GONE);
             }
         });
 
@@ -198,7 +300,36 @@ public class VideoFullActivity extends BaseActivity {
         videoView.setOnBufferListener(new OnBufferingUpdateListener() {
             @Override
             public void onBufferingUpdate(QihooMediaPlayer arg0, int arg1) {
-                // 缓冲
+                if (arg1 >= 0 && arg1 < 100) {
+                    if (!pbBuffer.isShown()) {
+                        pbBuffer.setVisibility(View.VISIBLE);
+                    }
+                } else if (arg1 == 100) {
+                    if (pbBuffer.isShown()) {
+                        pbBuffer.setVisibility(View.GONE);
+                    }
+                }
+            }
+        });
+
+        videoView.setOnSeekCompleteListener(new OnSeekCompleteListener() {
+
+            @Override
+            public void onSeekComplete(QihooMediaPlayer player) {
+                tvCurrentProgress.setText(CommonUtil.getTime(player.getCurrentPosition()));
+                if (pbBuffer.isShown()) {
+                    pbBuffer.setVisibility(View.GONE);
+                }
+                player.start();
+            }
+        });
+
+        videoView.setOnCompletetionListener(new OnCompletionListener() {
+
+            @Override
+            public void onCompletion(QihooMediaPlayer player) {
+                tvCurrentProgress.setText(CommonUtil.getTime(player.getDuration()));
+                finish();
             }
         });
 
@@ -227,6 +358,8 @@ public class VideoFullActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 if (rlController.isShown()) {
+                    hideBrightness();
+                    hideVolume();
                     rlController.setVisibility(View.GONE);
                 } else {
                     rlController.setVisibility(View.VISIBLE);
@@ -252,13 +385,51 @@ public class VideoFullActivity extends BaseActivity {
 
         videoView.initVideoWidAndHeight(width, height);
         videoView.setDataSource(website, url);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
 
+    private void initIbVolumeBack() {
+        if (getCurrentVolume() == 0) {
+            ibVolume.setBackgroundResource(R.drawable.ib_volume_silence);
+        } else {
+            ibVolume.setBackgroundResource(R.drawable.ib_volume_default);
+        }
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_UP:
+                handler.removeMessages(MSG_HIDE_CONTROLLER);
+                handler.sendEmptyMessageDelayed(MSG_HIDE_CONTROLLER, 5000);
+                break;
+
+            default:
+                break;
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private void initScreenBrightness() {
+        if (getScreenMode() == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC) {
+            setScreenMode(Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+            isBrightnessAuto = true;
+        } else {
+            isBrightnessAuto = false;
+        }
+    }
+
+    private void restoreScreenBrightness() {
+        if (isBrightnessAuto) {
+            setScreenMode(Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC);
+            isBrightnessAuto = true;
+        }
     }
 
     private int getScreenBrightness() {
         int screenBrightness = 255;
         try {
-            screenBrightness = Settings.System.getInt(getContentResolver(),
+            screenBrightness = Settings.System.getInt(this.getContentResolver(),
                     Settings.System.SCREEN_BRIGHTNESS);
         } catch (Exception localException) {
 
@@ -266,13 +437,36 @@ public class VideoFullActivity extends BaseActivity {
         return screenBrightness;
     }
 
-    private void saveScreenBrightness(int paramInt) {
+    private void setScreenMode(int paramInt) {
         try {
-            Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS,
+
+            Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE,
                     paramInt);
+
         } catch (Exception localException) {
             localException.printStackTrace();
         }
+    }
+
+    private int getScreenMode() {
+        int screenMode = 0;
+        try {
+            screenMode = Settings.System.getInt(getContentResolver(),
+                    Settings.System.SCREEN_BRIGHTNESS_MODE);
+        } catch (Exception localException) {
+
+        }
+        return screenMode;
+    }
+
+    private void saveScreenBrightness(int brightness) {
+        WindowManager.LayoutParams params = getWindow().getAttributes();
+        params.screenBrightness = brightness / 255f;
+        getWindow().setAttributes(params);
+
+        Uri uri = android.provider.Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS);
+        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, brightness);
+        getContentResolver().notifyChange(uri, null);
     }
 
     private int getCurrentVolume() {
@@ -298,10 +492,45 @@ public class VideoFullActivity extends BaseActivity {
         mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
     }
 
-    // @Override
-    // protected void onDestroy() {
-    // super.onDestroy();
-    // videoView.release();
-    // videoView=null;
-    // }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        finish();
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                adjustVolume = true;
+                vsbVolume.setProgress(vsbVolume.getProgress() - 10);
+                break;
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                adjustVolume = true;
+                vsbVolume.setProgress(vsbVolume.getProgress() + 10);
+                break;
+            case KeyEvent.KEYCODE_BACK:
+                super.onKeyDown(keyCode, event);
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+    private void release() {
+        restoreScreenBrightness();
+        if (videoView != null) {
+            videoView.stop();
+            videoView.release();
+            decorView.removeView(videoView);
+            videoView = null;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        release();
+    }
 }

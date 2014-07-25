@@ -5,20 +5,21 @@
 
     <com.wangli.qhvideoplugin.view.QHVideoController
         android:id="@+id/qhvc_controller"
-        android:layout_width="320dp"
-        android:layout_height="240dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true" >
     </com.wangli.qhvideoplugin.view.QHVideoController>
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@android:color/white" 
-        android:layout_below="@id/qhvc_controller"/>
+        android:layout_below="@id/qhvc_controller"
+        android:background="@android:color/white" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@android:color/white" 
-        android:layout_above="@id/qhvc_controller"/>
+        android:layout_above="@id/qhvc_controller"
+        android:background="@android:color/white" />
 
 </RelativeLayout>

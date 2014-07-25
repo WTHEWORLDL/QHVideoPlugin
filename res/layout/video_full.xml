@@ -8,6 +8,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:layout_marginLeft="24dp"
+        android:layout_marginTop="9dp"
         android:background="@drawable/ib_return"
         android:contentDescription="@string/app_name" />
 
@@ -16,7 +18,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="15dp"
-        android:layout_toRightOf="@id/ib_return" />
+        android:layout_marginTop="9dp"
+        android:layout_toRightOf="@id/ib_return"
+        android:textSize="16sp" />
 
     <RelativeLayout
         android:id="@+id/rl_controller_bottom"
@@ -48,7 +52,6 @@
                 android:id="@+id/ib_brightness_full"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
                 android:background="@drawable/ib_brightness_full"
                 android:contentDescription="@string/app_name" />
 
@@ -75,23 +78,23 @@
 
             <SeekBar
                 android:id="@+id/sb_progress_full"
+                style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="380dp"
                 android:layout_height="wrap_content"
-                android:minHeight="5dp"
-                android:maxHeight="5dp"
                 android:layout_gravity="center_vertical"
                 android:layout_marginLeft="10dp"
+                android:maxHeight="5dp"
+                android:minHeight="5dp"
                 android:progressDrawable="@drawable/style_seekbar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:thumbOffset="0dp"
-                android:thumb="@drawable/sb_thumb" />
+                android:thumb="@drawable/sb_thumb"
+                android:thumbOffset="0dp" />
 
             <ImageButton
                 android:id="@+id/ib_volume_full"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
-                android:background="@drawable/ib_volume"
+                android:background="@drawable/ib_volume_silence"
                 android:contentDescription="@string/app_name" />
         </LinearLayout>
     </RelativeLayout>
@@ -100,22 +103,28 @@
         android:id="@+id/vsb_brightness_full"
         android:layout_width="wrap_content"
         android:layout_height="100dp"
-        android:layout_above="@id/rl_controller_bottom"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:max="100"
+        android:layout_marginBottom="60dp"
+        android:layout_marginLeft="60dp"
+        android:maxHeight="5dp"
+        android:minHeight="5dp"
         android:progressDrawable="@drawable/style_seekbar"
-        android:visibility="gone"
-        android:thumb="@null" />
+        android:thumb="@drawable/vsb_thumb"
+        android:visibility="gone" />
 
     <com.wangli.qhvideoplugin.view.VerticalSeekBar
         android:id="@+id/vsb_volume_full"
         android:layout_width="wrap_content"
         android:layout_height="100dp"
-        android:layout_above="@id/rl_controller_bottom"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:max="100"
+        android:layout_marginBottom="60dp"
+        android:layout_marginRight="60dp"
+        android:maxHeight="5dp"
+        android:minHeight="5dp"
         android:progressDrawable="@drawable/style_seekbar"
-        android:visibility="gone"
-        android:thumb="@null" />
+        android:thumb="@drawable/vsb_thumb"
+        android:visibility="gone" />
 
 </RelativeLayout>
