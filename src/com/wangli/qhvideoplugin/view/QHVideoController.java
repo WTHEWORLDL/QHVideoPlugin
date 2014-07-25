@@ -161,6 +161,8 @@ public class QHVideoController extends FrameLayout {
 
         addView(rlPause, centerParams);
 
+        initVideoView(context);
+        
         pbBuffer.setVisibility(View.GONE);
         rlController.setVisibility(View.GONE);
         ivThumb.setOnClickListener(new OnClickListener() {
