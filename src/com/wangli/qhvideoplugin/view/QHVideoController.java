@@ -11,10 +11,13 @@ import com.qihoo.qplayer.view.QihooVideoView;
 import com.wangli.qhvideoplugin.R;
 import com.wangli.qhvideoplugin.activity.VideoFullActivity;
 import com.wangli.qhvideoplugin.utils.CommonUtil;
+import com.wangli.qhvideoplugin.utils.HttpUtil;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
@@ -33,6 +36,11 @@ import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 
+/**
+ * 用于在列表页显示的一个视频播放控件
+ * 
+ * @author wangli
+ */
 public class QHVideoController extends FrameLayout {
 
     private QihooVideoView videoView;
@@ -45,13 +53,14 @@ public class QHVideoController extends FrameLayout {
     private TextView tvTime;
 
     private final int videoWidthDp = 320;
+    private final int videoHeightDp = 180;
     private final int controllerHeightDp = 30;
     private final int ivPauseId = 0x12345678;
     private final int tvTimeMarginTopDp = 5;
 
-    private String website = "youku";
-    private String url = "http%3A%2F%2Fv.youku.com%2Fv_show%2Fid_XNzMzNjkwMjQ4.html";
-    private String title = "狗血的山姆";
+    private String website;
+    private String url;// http%3A%2F%2Fv.youku.com%2Fv_show%2Fid_XNzMzNjkwMjQ4.html
+    private String title;
 
     private RelativeLayout rlPause;
 
@@ -104,13 +113,46 @@ public class QHVideoController extends FrameLayout {
 
     }
 
-    public void setThumb(Bitmap bitmap) {
+    /**
+     * 初始化数据
+     * 
+     * @param title
+     * @param website
+     * @param videoUrl
+     * @param time
+     */
+    public void init(String title, String website, String videoUrl, String thumbUrl, long time) {
         if (ivThumb != null) {
-            ivThumb.setImageBitmap(bitmap);
+            ivThumb.setImageResource(R.drawable.iv_thumb);
+        }
+        setThumb(thumbUrl);
+        setTime(time);
+        this.title = title;
+        this.website = website;
+        this.url = videoUrl;
+    }
+
+    private void setThumb(final String thumbUrl) {
+        if (ivThumb != null) {
+            new AsyncTask<Void, Integer, byte[]>() {
+
+                @Override
+                protected byte[] doInBackground(Void... params) {
+                    byte[] bitmap = HttpUtil.getImage(thumbUrl);
+                    return bitmap;
+                }
+
+                protected void onPostExecute(byte[] result) {
+                    if (ivThumb != null) {
+                        ivThumb.setImageBitmap(BitmapFactory.decodeByteArray(result, 0,
+                                result.length));
+                    }
+                };
+            }.execute();
         }
     }
 
-    public void setTime(long time) {
+    private void setTime(long time) {
         if (tvTime != null) {
             tvTime.setText(CommonUtil.getTime(time));
         }
@@ -125,6 +167,7 @@ public class QHVideoController extends FrameLayout {
         rlController = (RelativeLayout) layoutInflater.inflate(R.layout.controller_strip_video,
                 this, false);
         controllerParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        rlController.setBackgroundColor(Color.TRANSPARENT);
         addView(rlController, controllerParams);
 
         ibFull = (ImageButton) findViewById(R.id.ib_full);
@@ -134,11 +177,14 @@ public class QHVideoController extends FrameLayout {
         ivThumb = new ImageView(context);
         ivThumb.setImageResource(R.drawable.iv_thumb);
 
+        FrameLayout.LayoutParams thumbParams = new FrameLayout.LayoutParams(
+                CommonUtil.dip2px(context, videoWidthDp), CommonUtil.dip2px(context, videoHeightDp));
+        thumbParams.gravity = Gravity.CENTER;
+        addView(ivThumb, thumbParams);
+
         FrameLayout.LayoutParams centerParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
         centerParams.gravity = Gravity.CENTER;
-        addView(ivThumb, centerParams);
-
         addView(pbBuffer, centerParams);
 
         rlPause = new RelativeLayout(context);
@@ -162,7 +208,7 @@ public class QHVideoController extends FrameLayout {
         addView(rlPause, centerParams);
 
         initVideoView(context);
-        
+
         pbBuffer.setVisibility(View.GONE);
         rlController.setVisibility(View.GONE);
         ivThumb.setOnClickListener(new OnClickListener() {
@@ -176,9 +222,10 @@ public class QHVideoController extends FrameLayout {
                     }
 
                     int width = CommonUtil.dip2px(context, videoWidthDp);
+                    int height = CommonUtil.dip2px(context, videoHeightDp);
 
                     videoView.setVisibility(View.VISIBLE);
-                    videoView.initVideoWidAndHeight(width, width);
+                    videoView.initVideoWidAndHeight(width, height);
                     videoView.setDataSource(website,
                             url);
                     pbBuffer.setVisibility(View.VISIBLE);
