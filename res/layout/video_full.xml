@@ -3,128 +3,146 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <ImageButton
-        android:id="@+id/ib_return"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:id="@+id/rl_controller_top"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:layout_marginLeft="24dp"
-        android:layout_marginTop="9dp"
-        android:background="@drawable/ib_return"
-        android:contentDescription="@string/app_name" />
-
-    <TextView
-        android:id="@+id/tv_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="15dp"
-        android:layout_marginTop="9dp"
-        android:layout_toRightOf="@id/ib_return"
-        android:textSize="16sp" />
-
-    <RelativeLayout
-        android:id="@+id/rl_controller_bottom"
-        android:layout_width="606dp"
-        android:layout_height="82dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
         android:background="@android:color/background_dark" >
 
         <ImageButton
-            android:id="@+id/ib_play_full"
+            android:id="@+id/ib_return"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="18dp"
-            android:background="@drawable/ib_play_full"
+            android:layout_alignParentTop="true"
+            android:layout_marginBottom="9dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/ib_return_video"
             android:contentDescription="@string/app_name" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_below="@id/ib_play_full"
-            android:layout_centerHorizontal="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal" >
-
-            <ImageButton
-                android:id="@+id/ib_brightness_full"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/ib_brightness_full"
-                android:contentDescription="@string/app_name" />
-
-            <TextView
-                android:id="@+id/tv_current_progress_full"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:text="@string/current_progress" />
-
-            <TextView
-                android:id="@+id/tv_slash_full_full"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dp"
-                android:text="@string/slash" />
-
-            <TextView
-                android:id="@+id/tv_total_progress_full"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="1dp"
-                android:text="@string/total_progress" />
-
-            <SeekBar
-                android:id="@+id/sb_progress_full"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="380dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="10dp"
-                android:maxHeight="5dp"
-                android:minHeight="5dp"
-                android:progressDrawable="@drawable/style_seekbar"
-                android:thumb="@drawable/sb_thumb"
-                android:thumbOffset="0dp" />
-
-            <ImageButton
-                android:id="@+id/ib_volume_full"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:background="@drawable/ib_volume_silence"
-                android:contentDescription="@string/app_name" />
-        </LinearLayout>
+            android:layout_marginBottom="9dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="9dp"
+            android:layout_toRightOf="@id/ib_return"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
     </RelativeLayout>
 
-    <com.wangli.qhvideoplugin.view.VerticalSeekBar
-        android:id="@+id/vsb_brightness_full"
-        android:layout_width="wrap_content"
-        android:layout_height="100dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginBottom="60dp"
-        android:layout_marginLeft="55dp"
-        android:maxHeight="3dp"
-        android:minHeight="3dp"
-        android:progressDrawable="@drawable/style_seekbar"
-        android:thumb="@drawable/vsb_thumb"
-        android:visibility="gone" />
+    <RelativeLayout
+        android:id="@+id/rl_controller_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true" >
 
-    <com.wangli.qhvideoplugin.view.VerticalSeekBar
-        android:id="@+id/vsb_volume_full"
-        android:layout_width="wrap_content"
-        android:layout_height="100dp"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginBottom="60dp"
-        android:layout_marginRight="55dp"
-        android:maxHeight="3dp"
-        android:minHeight="3dp"
-        android:progressDrawable="@drawable/style_seekbar"
-        android:thumb="@drawable/vsb_thumb"
-        android:visibility="gone" />
+        <RelativeLayout
+            android:id="@+id/rl_video_bottom"
+            android:layout_width="606dp"
+            android:layout_height="82dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:background="@android:color/background_dark" >
+
+            <ImageButton
+                android:id="@+id/ib_play_full"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/ib_play_full_video"
+                android:contentDescription="@string/app_name" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_below="@id/ib_play_full"
+                android:layout_centerHorizontal="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" >
+
+                <ImageButton
+                    android:id="@+id/ib_brightness_full"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/ib_brightness_full_video"
+                    android:contentDescription="@string/app_name" />
+
+                <TextView
+                    android:id="@+id/tv_current_progress_full"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:text="@string/current_progress" />
+
+                <TextView
+                    android:id="@+id/tv_slash_full_full"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="1dp"
+                    android:text="@string/slash" />
+
+                <TextView
+                    android:id="@+id/tv_total_progress_full"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="1dp"
+                    android:text="@string/total_progress" />
+
+                <SeekBar
+                    android:id="@+id/sb_progress_full"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="380dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="10dp"
+                    android:maxHeight="5dp"
+                    android:minHeight="5dp"
+                    android:progressDrawable="@drawable/style_seekbar_video"
+                    android:thumb="@drawable/sb_thumb_video"
+                    android:thumbOffset="0dp" />
+
+                <ImageButton
+                    android:id="@+id/ib_volume_full"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:background="@drawable/ib_volume_silence_video"
+                    android:contentDescription="@string/app_name" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <com.wangli.qhvideoplugin.view.VerticalSeekBar
+            android:id="@+id/vsb_brightness_full"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginBottom="60dp"
+            android:layout_marginLeft="55dp"
+            android:maxHeight="3dp"
+            android:minHeight="3dp"
+            android:progressDrawable="@drawable/style_seekbar_video"
+            android:thumb="@drawable/vsb_thumb_video"
+            android:visibility="gone" />
+
+        <com.wangli.qhvideoplugin.view.VerticalSeekBar
+            android:id="@+id/vsb_volume_full"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="60dp"
+            android:layout_marginRight="55dp"
+            android:maxHeight="3dp"
+            android:minHeight="3dp"
+            android:progressDrawable="@drawable/style_seekbar_video"
+            android:thumb="@drawable/vsb_thumb_video"
+            android:visibility="gone" />
+    </RelativeLayout>
 
 </RelativeLayout>

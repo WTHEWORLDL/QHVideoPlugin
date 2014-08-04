@@ -21,7 +21,6 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -160,9 +159,10 @@ public class QHVideoController extends FrameLayout {
                     }
 
                     protected void onPostExecute(byte[] result) {
-                        if (ivThumb != null) {
+                        if (ivThumb != null && result != null) {
                             ivThumb.setImageBitmap(BitmapFactory.decodeByteArray(result, 0,
                                     result.length));
+                            ivPause.setBackgroundResource(R.drawable.un_play_video);
                         }
                     };
                 }.execute();
@@ -232,13 +232,11 @@ public class QHVideoController extends FrameLayout {
                 FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
         centerParams.gravity = Gravity.CENTER;
         addView(rlPause, centerParams);
-
         pbBuffer.setVisibility(View.GONE);
         rlController.setVisibility(View.GONE);
         ivThumb.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e("Video", "xxx ivThumb");
                 if (ivThumb.isShown()) {
                     if (onStartPlayListener != null) {
                         onStartPlayListener.onStart();
@@ -279,7 +277,6 @@ public class QHVideoController extends FrameLayout {
         ibFull.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e("Video", "xxx ibFull");
                 int position = videoView.getCurrentPosition();
                 release();
                 Intent intent = new Intent(context, VideoFullActivity.class);
@@ -311,7 +308,7 @@ public class QHVideoController extends FrameLayout {
         videoView = new QihooVideoView(context);
         videoParams.gravity = Gravity.CENTER;
         addView(videoView, 0, videoParams);
-
+        videoView.setKeepScreenOn(true);
         videoView.setOnPreparedListener(new OnPreparedListener() {
             @Override
             public void onPrepared(QihooMediaPlayer player) {
@@ -342,9 +339,7 @@ public class QHVideoController extends FrameLayout {
             public void onClick(View v) {
                 if (videoView.isPlaying()) {
                     pause();
-                    Log.e("Video", "xxx isplay");
                 } else {
-                    Log.e("Video", "xxx noplay");
                     videoView.start();
                     rlPause.setVisibility(View.GONE);
                 }
@@ -363,7 +358,6 @@ public class QHVideoController extends FrameLayout {
             @Override
             public boolean onError(QihooMediaPlayer arg0, int arg1, int arg2) {
                 Toast.makeText(context, R.string.can_not_play, Toast.LENGTH_LONG).show();
-                Log.e("Video", "xxxarg1..." + arg1 + ",...arg2..." + arg2);
                 handler.sendEmptyMessage(MSG_RELEASE);
                 return false;
             }
