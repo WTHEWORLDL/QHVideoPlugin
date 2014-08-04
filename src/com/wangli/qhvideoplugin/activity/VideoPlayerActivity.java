@@ -9,8 +9,7 @@ import android.os.Bundle;
 public class VideoPlayerActivity extends BaseActivity {
 
     private QHVideoController controller;
-    private String website = "youku";
-    private String url = "http://v.youku.com/v_show/id_XNzQ2NDE0NzA4.html";// http%3A%2F%2Fv.youku.com%2Fv_show%2Fid_XNzMzNjkwMjQ4.html
+    private String url = "http://xstm.v.360.cn/movie/youku?url=http%3A%2F%2Fv.youku.com%2Fv_show%2Fid_XNzQ1MzkwMDc2.html";// http%3A%2F%2Fv.youku.com%2Fv_show%2Fid_XNzMzNjkwMjQ4.html
     private String title = "狗血的山姆";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +27,7 @@ public class VideoPlayerActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        controller.init(title, website, url, "http://img.nr99.com/attachment/forum/threadcover/04/eb/123658.jpg", 1000);
+        controller.init(title, url, "http://img.nr99.com/attachment/forum/threadcover/04/eb/123658.jpg","24:00");
     }
 
     @Override

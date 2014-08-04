@@ -6,5 +6,6 @@
     <string name="slash">/</string>
     <string name="switch_fullscreen">全屏</string>
     <string name="switch_smallscreen">退出全屏</string>
+    <string name="can_not_play">暂时无法播放该视频</string>
 
 </resources>

@@ -21,6 +21,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,13 +53,17 @@ public class QHVideoController extends FrameLayout {
     private ImageView ivPause;
     private TextView tvTime;
 
-    private final int videoWidthDp = 320;
-    private final int videoHeightDp = 180;
+    private final int videoWidthRatio = 16;
+    private final int videoHeightRatio = 9;
     private final int controllerHeightDp = 30;
     private final int ivPauseId = 0x12345678;
     private final int tvTimeMarginTopDp = 5;
 
-    private String website;
+    private int videoWidth;
+    private int videoHeight;
+
+    private OnStartPlayListener onStartPlayListener;
+
     private String url;// http%3A%2F%2Fv.youku.com%2Fv_show%2Fid_XNzMzNjkwMjQ4.html
     private String title;
 
@@ -109,8 +114,18 @@ public class QHVideoController extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        int width = MeasureSpec.getSize(widthMeasureSpec);
 
+        if (width > 0) {
+            videoWidth = width;
+            videoHeight = videoHeightRatio * width / videoWidthRatio;
+        }
+        if (ivThumb != null) {
+            android.view.ViewGroup.LayoutParams thumbParams = ivThumb.getLayoutParams();
+            thumbParams.width = videoWidth;
+            thumbParams.height = videoHeight;
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
     }
 
     /**
@@ -121,40 +136,43 @@ public class QHVideoController extends FrameLayout {
      * @param videoUrl
      * @param time
      */
-    public void init(String title, String website, String videoUrl, String thumbUrl, long time) {
+    public void init(String title, String videoUrl, String thumbUrl, String time) {
         if (ivThumb != null) {
-            ivThumb.setImageResource(R.drawable.iv_thumb);
+            ivPause.setBackgroundResource(R.drawable.un_play_no_thumb);
+            ivThumb.setImageDrawable(null);
+            ivThumb.setBackgroundColor(getResources().getColor(R.color.bg_video));
         }
         setThumb(thumbUrl);
         setTime(time);
         this.title = title;
-        this.website = website;
         this.url = videoUrl;
     }
 
     private void setThumb(final String thumbUrl) {
-        if (ivThumb != null) {
-            new AsyncTask<Void, Integer, byte[]>() {
+        if (thumbUrl != null && !"".equals(thumbUrl.trim())) {
+            if (ivThumb != null) {
+                new AsyncTask<Void, Integer, byte[]>() {
 
-                @Override
-                protected byte[] doInBackground(Void... params) {
-                    byte[] bitmap = HttpUtil.getImage(thumbUrl);
-                    return bitmap;
-                }
-
-                protected void onPostExecute(byte[] result) {
-                    if (ivThumb != null) {
-                        ivThumb.setImageBitmap(BitmapFactory.decodeByteArray(result, 0,
-                                result.length));
+                    @Override
+                    protected byte[] doInBackground(Void... params) {
+                        byte[] bitmap = HttpUtil.getImage(thumbUrl);
+                        return bitmap;
                     }
-                };
-            }.execute();
+
+                    protected void onPostExecute(byte[] result) {
+                        if (ivThumb != null) {
+                            ivThumb.setImageBitmap(BitmapFactory.decodeByteArray(result, 0,
+                                    result.length));
+                        }
+                    };
+                }.execute();
+            }
         }
     }
 
-    private void setTime(long time) {
+    private void setTime(String time) {
         if (tvTime != null) {
-            tvTime.setText(CommonUtil.getTime(time));
+            tvTime.setText(time);
         }
     }
 
@@ -174,23 +192,28 @@ public class QHVideoController extends FrameLayout {
         sbProgress = (SeekBar) findViewById(R.id.sb_progress);
 
         pbBuffer = new ProgressBar(context);
+        pbBuffer.setIndeterminateDrawable(getResources().getDrawable(
+                R.drawable.loading_video_progress));
         ivThumb = new ImageView(context);
-        ivThumb.setImageResource(R.drawable.iv_thumb);
+        ivThumb.setId(1234554321);
+        ivThumb.setBackgroundColor(getResources().getColor(R.color.bg_video));
 
         FrameLayout.LayoutParams thumbParams = new FrameLayout.LayoutParams(
-                CommonUtil.dip2px(context, videoWidthDp), CommonUtil.dip2px(context, videoHeightDp));
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
         thumbParams.gravity = Gravity.CENTER;
         addView(ivThumb, thumbParams);
 
-        FrameLayout.LayoutParams centerParams = new FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-        centerParams.gravity = Gravity.CENTER;
-        addView(pbBuffer, centerParams);
+        params.gravity = Gravity.CENTER;
+        params.width = (int) CommonUtil.dip2px(getContext(), 30);
+        params.height = params.width;
+        addView(pbBuffer, params);
 
         rlPause = new RelativeLayout(context);
 
         ivPause = new ImageView(context);
-        ivPause.setBackgroundResource(R.drawable.un_play);
+        ivPause.setBackgroundResource(R.drawable.un_play_no_thumb);
 
         RelativeLayout.LayoutParams pauseParams = new RelativeLayout.LayoutParams(
                 RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
@@ -205,30 +228,30 @@ public class QHVideoController extends FrameLayout {
         tvTime.setText(CommonUtil.getTime(0));
         rlPause.addView(tvTime, timeParams);
 
+        FrameLayout.LayoutParams centerParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+        centerParams.gravity = Gravity.CENTER;
         addView(rlPause, centerParams);
-
-        initVideoView(context);
 
         pbBuffer.setVisibility(View.GONE);
         rlController.setVisibility(View.GONE);
         ivThumb.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.e("Video", "xxx ivThumb");
                 if (ivThumb.isShown()) {
+                    if (onStartPlayListener != null) {
+                        onStartPlayListener.onStart();
+                    }
                     rlPause.setVisibility(View.GONE);
                     tvTime.setVisibility(View.GONE);
+                    pbBuffer.setVisibility(View.VISIBLE);
                     if (videoView == null) {
                         initVideoView(context);
                     }
-
-                    int width = CommonUtil.dip2px(context, videoWidthDp);
-                    int height = CommonUtil.dip2px(context, videoHeightDp);
-
                     videoView.setVisibility(View.VISIBLE);
-                    videoView.initVideoWidAndHeight(width, height);
-                    videoView.setDataSource(website,
-                            url);
-                    pbBuffer.setVisibility(View.VISIBLE);
+                    videoView.initVideoWidAndHeight(videoWidth, videoHeight);
+                    videoView.setDataSource(url);
                 }
             }
         });
@@ -256,17 +279,28 @@ public class QHVideoController extends FrameLayout {
         ibFull.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.e("Video", "xxx ibFull");
                 int position = videoView.getCurrentPosition();
                 release();
                 Intent intent = new Intent(context, VideoFullActivity.class);
                 intent.putExtra("position", position);
                 intent.putExtra("url", url);
-                intent.putExtra("website", website);
                 intent.putExtra("title", title);
 
                 context.startActivity(intent);
             }
         });
+    }
+
+    public boolean isPlay() {
+        if (videoView != null) {
+            return videoView.isPlaying();
+        }
+        return false;
+    }
+
+    public QihooVideoView getVideoView() {
+        return videoView;
     }
 
     private void initVideoView(final Context context) {
@@ -307,9 +341,10 @@ public class QHVideoController extends FrameLayout {
             @Override
             public void onClick(View v) {
                 if (videoView.isPlaying()) {
-                    videoView.pause();
-                    rlPause.setVisibility(View.VISIBLE);
+                    pause();
+                    Log.e("Video", "xxx isplay");
                 } else {
+                    Log.e("Video", "xxx noplay");
                     videoView.start();
                     rlPause.setVisibility(View.GONE);
                 }
@@ -327,17 +362,20 @@ public class QHVideoController extends FrameLayout {
 
             @Override
             public boolean onError(QihooMediaPlayer arg0, int arg1, int arg2) {
-                Toast.makeText(context, "error", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, R.string.can_not_play, Toast.LENGTH_LONG).show();
+                Log.e("Video", "xxxarg1..." + arg1 + ",...arg2..." + arg2);
                 handler.sendEmptyMessage(MSG_RELEASE);
                 return false;
             }
         });
+        requestFocus();
     }
 
     public void pause() {
         if (videoView != null) {
-
             videoView.pause();
+            ivPause.setBackgroundResource(R.drawable.un_play_video);
+            rlPause.setVisibility(View.VISIBLE);
         }
     }
 
@@ -366,7 +404,20 @@ public class QHVideoController extends FrameLayout {
         pbBuffer.setVisibility(View.GONE);
         ivThumb.setVisibility(View.VISIBLE);
         rlController.setVisibility(View.GONE);
+        if (ivThumb.getDrawable() != null) {
+            ivPause.setBackgroundResource(R.drawable.un_play_video);
+        } else {
+            ivPause.setBackgroundResource(R.drawable.un_play_no_thumb);
+        }
         rlPause.setVisibility(View.VISIBLE);
         tvTime.setVisibility(View.VISIBLE);
+    }
+
+    public void setOnStartPlayListener(OnStartPlayListener onStartPlayListener) {
+        this.onStartPlayListener = onStartPlayListener;
+    }
+
+    public interface OnStartPlayListener {
+        public void onStart();
     }
 }

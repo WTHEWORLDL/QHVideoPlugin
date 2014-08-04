@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item>
+        <rotate
+            android:drawable="@drawable/loading_video"
+            android:fromDegrees="0.0"
+            android:pivotX="50.0%"
+            android:pivotY="50.0%"
+            android:toDegrees="1080.0" />
+    </item>
+</layer-list>
+
+<!-- <?xml version="1.0" encoding="utf-8"?>
+<animated-rotate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="10000"
+    android:fromDegrees="0"
+    android:interpolator="@android:anim/linear_interpolator"
+    android:pivotX="50%"
+    android:pivotY="50%"
+    android:repeatCount="infinite"
+    android:drawable="@drawable/loading_rotate"
+    android:toDegrees="360" /> -->

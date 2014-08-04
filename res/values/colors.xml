@@ -2,5 +2,6 @@
 <resources>
 
     <color name="seekbar">#2fe939</color>
+    <color name="bg_video">#f2f2f2</color>
 
 </resources>
